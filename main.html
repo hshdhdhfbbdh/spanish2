@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish II Flashcards - Made by Roman</title>
+    <style>
+        /* Basic page styling */
+        :root {
+            --primary-color: #4257b2;
+            --secondary-color: #586380;
+            --background-color: #f6f7fb;
+            --card-background: #ffffff;
+            --text-color: #303545;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Main container for the app */
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        h2 {
+            font-size: 1rem;
+            color: var(--secondary-color);
+            font-weight: normal;
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        /* Styles for the flashcard scene */
+        .flashcard-scene {
+            width: 100%;
+            height: 350px;
+            perspective: 1000px; /* Enables 3D space for the flip effect */
+            margin-bottom: 1.5rem;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            cursor: pointer;
+        }
+
+        /* Flipped state for the card */
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Common styles for both front and back faces of the card */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hides the back side of the element */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            padding: 20px;
+            background-color: var(--card-background);
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .category-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary-color);
+            position: absolute;
+            top: 20px;
+        }
+
+        /* Specific style for the back face */
+        .card-face--back {
+            transform: rotateY(180deg);
+            background-color: #fafafa;
+            color: var(--primary-color);
+        }
+        
+        /* Progress indicator styling */
+        .progress-indicator {
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Navigation controls container */
+        .navigation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-button, .shuffle-button {
+            background-color: var(--card-background);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.2s, color 0.2s, transform 0.1s;
+            flex-grow: 1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .shuffle-button {
+            background-color: var(--primary-color);
+            color: var(--card-background);
+        }
+
+        .nav-button:hover {
+            background-color: #ebeffc;
+        }
+
+        .shuffle-button:hover {
+            background-color: #3a4c9b;
+        }
+
+        .nav-button:active, .shuffle-button:active {
+            transform: translateY(1px);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .card-face {
+                font-size: 1.6rem;
+            }
+            .flashcard-scene {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>Spanish II Vocabulary</h1>
+        <h2>Capítulo 2 - Vocabulario 51</h2>
+        
+        <!-- The 3D scene for the flashcard -->
+        <div class="flashcard-scene">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-face--front">
+                    <span class="category-label" id="category-front"></span>
+                    <div id="card-front-text"></div>
+                </div>
+                <div class="card-face card-face--back">
+                    <span class="category-label" id="category-back"></span>
+                    <div id="card-back-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress counter -->
+        <div class="progress-indicator" id="progress-indicator"></div>
+
+        <!-- Navigation buttons -->
+        <div class="navigation-controls">
+            <button class="nav-button" id="prev-button">Previous</button>
+            <button class="shuffle-button" id="shuffle-button">Shuffle</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+    </div>
+
+    <script>
+        // Data extracted from the "Vocabulario 51" image
+        const vocabulary = [
+            // Los verbos reflexivos
+            { category: "Verbos Reflexivos", spanish: "acordarse (de) (o:ue)", english: "to remember" },
+            { category: "Verbos Reflexivos", spanish: "acostarse (o:ue)", english: "to go to bed" },
+            { category: "Verbos Reflexivos", spanish: "afeitarse", english: "to shave" },
+            { category: "Verbos Reflexivos", spanish: "bañarse", english: "to bathe; to take a bath" },
+            { category: "Verbos Reflexivos", spanish: "cepillarse el pelo", english: "to brush one's hair" },
+            { category: "Verbos Reflexivos", spanish: "cepillarse los dientes", english: "to brush one's teeth" },
+            { category: "Verbos Reflexivos", spanish: "despertarse (e:ie)", english: "to wake up" },
+            { category: "Verbos Reflexivos", spanish: "dormirse (o:ue)", english: "to go to sleep; to fall asleep" },
+            { category: "Verbos Reflexivos", spanish: "ducharse", english: "to shower; to take a shower" },
+            { category: "Verbos Reflexivos", spanish: "enojarse (con)", english: "to get angry (with)" },
+            { category: "Verbos Reflexivos", spanish: "irse", english: "to go away; to leave" },
+            { category: "Verbos Reflexivos", spanish: "lavarse la cara", english: "to wash one's face" },
+            { category: "Verbos Reflexivos", spanish: "lavarse las manos", english: "to wash one's hands" },
+            { category: "Verbos Reflexivos", spanish: "levantarse", english: "to get up" },
+            { category: "Verbos Reflexivos", spanish: "llamarse", english: "to be called; to be named" },
+            { category: "Verbos Reflexivos", spanish: "maquillarse", english: "to put on makeup" },
+            { category: "Verbos Reflexivos", spanish: "peinarse", english: "to comb one's hair" },
+            { category: "Verbos Reflexivos", spanish: "ponerse", english: "to put on" },
+            { category: "Verbos Reflexivos", spanish: "ponerse (+ adj.)", english: "to become (+ adj.)" },
+            { category: "Verbos Reflexivos", spanish: "preocuparse (por)", english: "to worry (about)" },
+            { category: "Verbos Reflexivos", spanish: "probarse (o:ue)", english: "to try on" },
+            { category: "Verbos Reflexivos", spanish: "quedarse", english: "to stay; to remain" },
+            { category: "Verbos Reflexivos", spanish: "quitarse", english: "to take off" },
+            { category: "Verbos Reflexivos", spanish: "secarse", english: "to dry oneself" },
+            { category: "Verbos Reflexivos", spanish: "sentarse (e:ie)", english: "to sit down" },
+            { category: "Verbos Reflexivos", spanish: "sentirse (e:ie)", english: "to feel" },
+            { category: "Verbos Reflexivos", spanish: "vestirse (e:i)", english: "to get dressed" },
+            
+            // Palabras de secuencia
+            { category: "Palabras de secuencia", spanish: "antes (de)", english: "before" },
+            { category: "Palabras de secuencia", spanish: "después", english: "afterwards; then" },
+            { category: "Palabras de secuencia", spanish: "después (de)", english: "after" },
+            { category: "Palabras de secuencia", spanish: "durante", english: "during" },
+            { category: "Palabras de secuencia", spanish: "entonces", english: "then" },
+            { category: "Palabras de secuencia", spanish: "luego", english: "then" },
+            { category: "Palabras de secuencia", spanish: "más tarde", english: "later on" },
+            { category: "Palabras de secuencia", spanish: "por último", english: "finally" },
+            
+            // Verbos similares a gustar
+            { category: "Verbos similares a gustar", spanish: "aburrir", english: "to bore" },
+            { category: "Verbos similares a gustar", spanish: "encantar", english: "to like very much; to love (inanimate objects)" },
+            { category: "Verbos similares a gustar", spanish: "faltar", english: "to lack; to need" },
+            { category: "Verbos similares a gustar", spanish: "fascinar", english: "to fascinate; to like very much" },
+            { category: "Verbos similares a gustar", spanish: "importar", english: "to be important to; to matter" },
+            { category: "Verbos similares a gustar", spanish: "interesar", english: "to be interesting to; to interest" },
+            { category: "Verbos similares a gustar", spanish: "molestar", english: "to bother; to annoy" },
+            { category: "Verbos similares a gustar", spanish: "quedar", english: "to be left over; to fit (clothing)" },
+            
+            // Palabras indefinidas y negativas
+            { category: "Indefinidas y negativas", spanish: "algo", english: "something; anything" },
+            { category: "Indefinidas y negativas", spanish: "alguien", english: "someone; somebody; anyone" },
+            { category: "Indefinidas y negativas", spanish: "alguno/a(s), algún", english: "some; any" },
+            { category: "Indefinidas y negativas", spanish: "jamás", english: "never; not ever" },
+            { category: "Indefinidas y negativas", spanish: "nada", english: "nothing; not anything" },
+            { category: "Indefinidas y negativas", spanish: "nadie", english: "no one; nobody; not anyone" },
+            { category: "Indefinidas y negativas", spanish: "ni... ni", english: "neither... nor" },
+            { category: "Indefinidas y negativas", spanish: "ninguno/a, ningún", english: "no; none; not any" },
+            { category: "Indefinidas y negativas", spanish: "nunca", english: "never; not ever" },
+            { category: "Indefinidas y negativas", spanish: "o... o", english: "either... or" },
+            { category: "Indefinidas y negativas", spanish: "siempre", english: "always" },
+            { category: "Indefinidas y negativas", spanish: "también", english: "also; too" },
+            { category: "Indefinidas y negativas", spanish: "tampoco", english: "neither; not either" },
+            
+            // Palabras adicionales
+            { category: "Palabras adicionales", spanish: "el despertador", english: "alarm clock" },
+            { category: "Palabras adicionales", spanish: "las pantuflas", english: "slippers" },
+            { category: "Palabras adicionales", spanish: "la rutina diaria", english: "daily routine" },
+            { category: "Palabras adicionales", spanish: "por la mañana", english: "in the morning" },
+            { category: "Palabras adicionales", spanish: "por la noche", english: "at night" },
+            { category: "Palabras adicionales", spanish: "por la tarde", english: "in the afternoon; in the evening" },
+            
+            // En el baño
+            { category: "En el baño", spanish: "el baño, el cuarto de baño", english: "bathroom" },
+            { category: "En el baño", spanish: "el champú", english: "shampoo" },
+            { category: "En el baño", spanish: "la crema de afeitar", english: "shaving cream" },
+            { category: "En el baño", spanish: "la ducha", english: "shower" },
+            { category: "En el baño", spanish: "el espejo", english: "mirror" },
+            { category: "En el baño", spanish: "el inodoro", english: "toilet" },
+            { category: "En el baño", spanish: "el jabón", english: "soap" },
+            { category: "En el baño", spanish: "el lavabo", english: "sink" },
+            { category: "En el baño", spanish: "el maquillaje", english: "makeup" },
+            { category: "En el baño", spanish: "la pasta de dientes", english: "toothpaste" },
+            { category: "En el baño", spanish: "la toalla", english: "towel" }
+        ];
+
+        // --- DOM Element References ---
+        const flashcard = document.getElementById('flashcard');
+        const cardFrontText = document.getElementById('card-front-text');
+        const cardBackText = document.getElementById('card-back-text');
+        const categoryFront = document.getElementById('category-front');
+        const categoryBack = document.getElementById('category-back');
+        const progressIndicator = document.getElementById('progress-indicator');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const shuffleButton = document.getElementById('shuffle-button');
+
+        // --- State ---
+        let currentIndex = 0;
+        let cards = [...vocabulary]; // Create a mutable copy of the vocabulary
+
+        // --- Functions ---
+
+        /**
+         * Updates the content of the flashcard and the progress indicator
+         * based on the current index.
+         */
+        function updateCard() {
+            if (cards.length === 0) return;
+
+            const currentCard = cards[currentIndex];
+            const isFlipped = flashcard.classList.contains('is-flipped');
+            
+            // 1. Always update Front (Spanish) and Categories immediately
+            cardFrontText.textContent = currentCard.spanish;
+            categoryFront.textContent = currentCard.category;
+            categoryBack.textContent = currentCard.category;
+            progressIndicator.textContent = `Card ${currentIndex + 1} / ${cards.length}`;
+
+            // 2. Handle Back (English) Logic to prevent spoilers
+            if (isFlipped) {
+                // If the card is currently showing the answer (Back), flip it to Front.
+                flashcard.classList.remove('is-flipped');
+                
+                // CRITICAL FIX: 
+                // Delay updating the Back text. This ensures the user sees the OLD answer 
+                // spinning away during the transition, rather than the NEW answer 
+                // flashing before the card hides it.
+                // We wait 300ms (halfway through the 0.6s transition) when the card is edge-on (90deg).
+                setTimeout(() => {
+                    cardBackText.textContent = currentCard.english;
+                }, 300);
+            } else {
+                // If card is already Front-facing, update the hidden Back immediately.
+                cardBackText.textContent = currentCard.english;
+            }
+        }
+
+        /**
+         * Navigates to the next card in the deck.
+         */
+        function showNextCard() {
+            currentIndex = (currentIndex + 1) % cards.length;
+            updateCard();
+        }
+
+        /**
+         * Navigates to the previous card in the deck.
+         */
+        function showPrevCard() {
+            currentIndex = (currentIndex - 1 + cards.length) % cards.length;
+            updateCard();
+        }
+
+        /**
+         * Shuffles the card deck using the Fisher-Yates algorithm and resets to the first card.
+         */
+        function shuffleCards() {
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]]; // Swap elements
+            }
+            currentIndex = 0;
+            // Force reset flip state manually if needed before update, 
+            // though updateCard handles logic well.
+            updateCard();
+        }
+
+        /**
+         * Handle Keyboard navigation
+         */
+        function handleKeydown(e) {
+            if (e.key === 'ArrowRight') showNextCard();
+            if (e.key === 'ArrowLeft') showPrevCard();
+            if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault(); // Prevent scrolling on space
+                flashcard.classList.toggle('is-flipped');
+            }
+        }
+
+        // --- Event Listeners ---
+        flashcard.addEventListener('click', () => {
+            flashcard.classList.toggle('is-flipped');
+        });
+
+        nextButton.addEventListener('click', showNextCard);
+        prevButton.addEventListener('click', showPrevCard);
+        shuffleButton.addEventListener('click', shuffleCards);
+        document.addEventListener('keydown', handleKeydown);
+
+        // --- Initial Load ---
+        updateCard();
+
+    </script>
+</body>
+</html>
+
