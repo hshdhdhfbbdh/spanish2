@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spanish II Flashcards</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header with Title and Dropdown -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1>Spanish II Vocabulary - Roman</h1>
+                <h2 id="chapter-title">Capítulo 2 - Vocabulario 51</h2>
+            </div>
+            
+            <div class="deck-selector">
+                <label for="deck-select">Select Chapter:</label>
+                <select id="deck-select">
+                    <option value="vocab51">Vocabulario 51 (Routine)</option>
+                    <option value="vocab91">Vocabulario 91 (Food)</option>
+                </select>
+            </div>
+        </header>
+        
+        <!-- The 3D scene for the flashcard -->
+        <div class="flashcard-scene">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-face--front">
+                    <span class="category-label" id="category-front"></span>
+                    <div id="card-front-text"></div>
+                </div>
+                <div class="card-face card-face--back">
+                    <span class="category-label" id="category-back"></span>
+                    <div id="card-back-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress counter -->
+        <div class="progress-indicator" id="progress-indicator"></div>
+
+        <!-- Navigation buttons -->
+        <div class="navigation-controls">
+            <button class="nav-button" id="prev-button">Previous</button>
+            <button class="shuffle-button" id="shuffle-button">Shuffle</button>
+            <button class="nav-button" id="next-button">Next</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
